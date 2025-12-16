@@ -887,19 +887,26 @@ input[type="range"]::-moz-range-thumb {
   <div id="particleArea"></div>
 
   <!-- BGM -->
-<audio id="bgm" src="bgm/bg/main_bgm.mp3" loop></audio>
-<audio id="clickSound" src="bgm/bg/click.mp3"></audio>
-<audio id="startSound" src="bgm/bg/start.mp3"></audio>
-<audio id="shakeSound" src="bgm/bg/shake.mp3"></audio>
-<audio id="c_clickSound" src="bgm/bg/c_click.mp3"></audio>
-<audio id="bgm_대길" src="bgm/result/대길.mp3"></audio>
-<audio id="bgm_중길" src="bgm/result/중길.mp3"></audio>
-<audio id="bgm_소길" src="bgm/result/소길.mp3"></audio>
-<audio id="bgm_소흉" src="bgm/result/소흉.mp3"></audio>
-<audio id="bgm_중흉" src="bgm/result/중흉.mp3"></audio>
-<audio id="bgm_대흉" src="bgm/result/대흉.mp3"></audio>
-<audio id="boomL" src="bgm/result/boom-L.mp3"></audio>
-<audio id="boomR" src="bgm/result/boom-R.mp3"></audio>
+<!-- BGM: 시작 버튼 눌러야 필요 -->
+<audio id="bgm" src="bgm/bg/main_bgm.mp3" loop preload="none"></audio>
+
+<!-- 효과음: 빠르게 필요 -->
+<audio id="clickSound" src="bgm/bg/click.mp3" preload="auto"></audio>
+<audio id="startSound" src="bgm/bg/start.mp3" preload="auto"></audio>
+<audio id="shakeSound" src="bgm/bg/shake.mp3" preload="auto"></audio>
+<audio id="c_clickSound" src="bgm/bg/c_click.mp3" preload="auto"></audio>
+
+<!-- 결과 BGM -->
+<audio id="bgm_대길" src="bgm/result/대길.mp3" preload="auto"></audio>
+<audio id="bgm_중길" src="bgm/result/중길.mp3" preload="auto"></audio>
+<audio id="bgm_소길" src="bgm/result/소길.mp3" preload="auto"></audio>
+<audio id="bgm_소흉" src="bgm/result/소흉.mp3" preload="auto"></audio>
+<audio id="bgm_중흉" src="bgm/result/중흉.mp3" preload="auto"></audio>
+<audio id="bgm_대흉" src="bgm/result/대흉.mp3" preload="auto"></audio>
+
+<!-- 폭발음 -->
+<audio id="boomL" src="bgm/result/boom-L.mp3" preload="auto"></audio>
+<audio id="boomR" src="bgm/result/boom-R.mp3" preload="auto"></audio>
 </div>
 
 <!-- 방명록 패널 (오른쪽에서 슬라이드) -->
@@ -924,15 +931,17 @@ input[type="range"]::-moz-range-thumb {
 <!-- 방명록 관련 스크립트 (Firebase 포함) -->
 <script type="module">
 
-let originalParent = null;
-let originalNextSibling = null;
+let firebaseInited = false;
 
-  // Firebase imports (원본 유지)
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  import {
+async function initFirebase() {
+  if (firebaseInited) return;
+  firebaseInited = true;
+
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js");
+  const {
     getFirestore, collection, addDoc, onSnapshot,
     deleteDoc, doc, serverTimestamp, orderBy, query
-  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+  } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js");
 
   const firebaseConfig = {
     apiKey: "AIzaSyDF4cfl2658vOEvGmVrAd2PZhb_GbRC83w",
@@ -1161,14 +1170,6 @@ document.addEventListener("mouseup", () => {
   el.dataset.dragging = "false";
   el.classList.remove("grabbing");
 
-// 🔥 원래 자리로 되돌리기
-if (originalParent) {
-  if (originalNextSibling) {
-    originalParent.insertBefore(el, originalNextSibling);
-  } else {
-    originalParent.appendChild(el);
-  }
-}
 el.style.zIndex = "";
 el.style.pointerEvents = "";
 el.style.visibility = "";
@@ -1187,54 +1188,50 @@ el.style.visibility = "";
   let x = rect.left;
   let y = rect.top;
 
-  function physicsLoop() {
-    vx *= friction;
-    vy *= friction;
+function physicsLoop() {
+  vx *= friction;
+  vy *= friction;
 
-    x += vx;
-    y += vy;
+  x += vx;
+  y += vy;
 
-    const maxX = window.innerWidth - rect.width;
-    const maxY = window.innerHeight - rect.height;
+  const maxX = window.innerWidth - rect.width;
+  const maxY = window.innerHeight - rect.height;
 
-    let hit = false;
+  let hit = false;
 
-    // 좌우 벽
-    if (x <= 0) {
-      x = 0;
-      vx *= -bounce;
-      hit = true;
-    } else if (x >= maxX) {
-      x = maxX;
-      vx *= -bounce;
-      hit = true;
+  if (x <= 0) { x = 0; vx *= -bounce; hit = true; }
+  else if (x >= maxX) { x = maxX; vx *= -bounce; hit = true; }
+
+  if (y <= 0) { y = 0; vy *= -bounce; hit = true; }
+  else if (y >= maxY) { y = maxY; vy *= -bounce; hit = true; }
+
+  el.style.left = x + "px";
+  el.style.top  = y + "px";
+
+  if (hit) scheduleRemove(1000);
+
+  if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
+    requestAnimationFrame(physicsLoop);
+  } else {
+    // ✅ 멈춘 뒤 복귀
+    if (originalParent) {
+      if (originalNextSibling) {
+        originalParent.insertBefore(el, originalNextSibling);
+      } else {
+        originalParent.appendChild(el);
+      }
     }
 
-    // 상하 벽
-    if (y <= 0) {
-      y = 0;
-      vy *= -bounce;
-      hit = true;
-    } else if (y >= maxY) {
-      y = maxY;
-      vy *= -bounce;
-      hit = true;
-    }
-
-    el.style.left = x + "px";
-    el.style.top = y + "px";
-
-if (hit) {
-  scheduleRemove(1000);
+    el.style.position = "";
+    el.style.left = "";
+    el.style.top = "";
+    el.style.zIndex = "";
+  }
 }
 
-    // 계속 움직일 조건
-    if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
-      requestAnimationFrame(physicsLoop);
-    }
-  }
-
-  physicsLoop();
+// ✅ 여기서 딱 한 번만 호출
+physicsLoop();
 });
 
       el.addEventListener("animationend", ()=>{
@@ -1269,11 +1266,14 @@ if (hit) {
 
     for(const [id,data] of messagesMap){ list.appendChild(makeNoteItem(id,data)); if(!spawnerActive.get(id)) startSpawner(id); }
   });
+}
+
+window.initFirebase = initFirebase;
 
 </script>
 
 <!-- 오미쿠지 메인 스크립트 (원본 기능들 전부 유지) -->
-<script>
+<script type="module">
 const startScreen = document.getElementById("startScreen");
 const loadingScreen = document.getElementById("loadingScreen");
 const loadingBar = document.getElementById("loadingBar");
@@ -1307,6 +1307,14 @@ volumeSlider.value = bgm.volume;
 volumeSlider.addEventListener("input", () => {
   bgm.volume = volumeSlider.value;
 });
+
+function preloadImage(src) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = res;
+    img.src = src;
+  });
+}
 
 function changeCharacterWithSmokeByResult(result){
 
@@ -1371,7 +1379,8 @@ shakeSound.addEventListener("play", () => {
 });
 
 /* 시작하기 → 로딩 화면 → 게임 화면 */
-startBtn.addEventListener("click", () => {
+startBtn.addEventListener("click", async () => {
+  await window.initFirebase();
   bgm.volume = 0.4;
   bgm.play();
   startSound.currentTime = 0;
@@ -1379,6 +1388,13 @@ startBtn.addEventListener("click", () => {
 
   startScreen.style.display = "none";
   loadingScreen.style.display = "flex";
+
+  await Promise.all([
+    preloadImage("character_img/left.png"),
+    preloadImage("character_img/right.png"),
+    preloadImage("body_img/bg/game_bg.png"),
+    preloadImage("body_img/bg/box.png")
+  ]);
 
   let progress = 0;
   const messages = [
@@ -1734,4 +1750,5 @@ function playResultBgm(result) {
 </script>
 </body>
 </html>
+
 
