@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="icon/favicon.png">
+<title>두근두근 운세 보기</title>
+
+<style>
+
+* {
+  user-select: none !important;
+}
+
+::selection {
+  background: transparent;
+}
+
+input,
+textarea {
+  user-select: text !important;
+}
+
+html, body, * { cursor: url("icon/cursor.png") 2 2, auto !important; }
+
+button,
+#box,
+#stick {
+  cursor: url("icon/cursor.png") 2 2, auto;
+}
+
+html, body, *:active { cursor: url("icon/cursor2.png") 2 2, auto !important; }
+
+/* ---------- 기존 오미쿠지 스타일 (원본 유지)s ---------- */
+:root {
+  --box-width: 250px;
+  --box-height: 400px;
+  --stick-width: 40px;
+  --stick-height: 160px;
+}
+
+#startScreen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100vh;
+  background: #fbeedc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  background: url("body_img/bg/start_bg.png") no-repeat center/cover;
+}
+
+#startBtn { 
+padding: 14px 26px; 
+background: #ef5350; 
+font-size: 20px; 
+border-radius: 8px; 
+color: white; 
+border: none; 
+cursor: pointer; 
+box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+} 
+
+#startBtn:active { 
+transform: scale(0.95); 
+}
+
+/* 🔥 추가된 로딩 화면 */
+#loadingScreen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 998;
+}
+
+#loadingImg { 
+width: 300px; 
+height: auto; 
+margin-bottom: 20px; 
+animation: shakeImg 0.5s infinite ease-in-out; 
+}
+
+@keyframes shakeImg { 
+0%{transform:translate(0,0) rotate(0deg);}
+25%{transform:translate(-3px,0) rotate(-3deg);}
+50%{transform:translate(0,-2px) rotate(3deg);}
+75%{transform:translate(3px,0) rotate(0deg);}
+100%{transform:translate(0,0) rotate(-3deg);} 
+}
+
+#loadingBarWrap{ 
+width:300px; 
+height:22px; 
+background:#ddd; 
+border-radius:10px; 
+overflow:hidden; 
+margin-top:20px; 
+}
+
+#loadingBar{ 
+width:0%; 
+height:100%; 
+background: linear-gradient(90deg,#ff9800,#ffca28); 
+transition: width 0.2s; 
+}
+
+/* 플레이 화면 기본적으로 숨김 */
+#gameScreen { 
+display: none; 
+flex-direction: column; 
+justify-content: center; 
+align-items: center; 
+position: relative; 
+background: url("body_img/bg/game_bg.png") no-repeat center/cover; 
+width: 100%; 
+height: 100%; 
+}
+
+/* 캐릭터 등장 애니메이션 */
+.character-left { 
+position: absolute; 
+left: 100px; 
+top: 110%; 
+transition: top 1.2s ease-out; 
+width: 550px; 
+height: 770px; 
+opacity: 0; 
+z-index: 25; 
+}
+
+.character-right { 
+position: absolute; 
+right: 100px; 
+top: 110%; 
+transition: top 1.2s ease-out; 
+width: 550px; 
+height: 770px; 
+opacity: 0; 
+z-index: 25; 
+}
+
+@keyframes shakeLeft { 
+0%{transform:translateY(-50%) rotate(0deg);}
+25%{transform:translateY(-50%) rotate(-2deg);}
+50%{transform:translateY(-50%) rotate(2deg);}
+75%{transform:translateY(-50%) rotate(-1deg);}
+100%{transform:translateY(-50%) rotate(0deg);} 
+}
+
+@keyframes shakeRight { 
+0%{transform:translateY(50%) rotate(0deg);}
+25%{transform:translateY(50%) rotate(2deg);}
+50%{transform:translateY(50%) rotate(-2deg);}
+75%{transform:translateY(50%) rotate(1deg);}
+100%{transform:translateY(50%) rotate(0deg);} 
+}
+
+@keyframes fastShakeLeft { 
+0%{transform:translateY(-50%) rotate(0deg);}
+20%{transform:translateY(-50%) rotate(-6deg);}
+40%{transform:translateY(-50%) rotate(6deg);}
+60%{transform:translateY(-50%) rotate(-4deg);}
+80%{transform:translateY(-50%) rotate(4deg);}
+100%{transform:translateY(-50%) rotate(0deg);} 
+}
+
+@keyframes fastShakeRight { 
+0%{transform:translateY(-50%) rotate(0deg);}
+20%{transform:translateY(-50%) rotate(6deg);}
+40%{transform:translateY(-50%) rotate(-6deg);}
+60%{transform:translateY(-50%) rotate(4deg);}
+80%{transform:translateY(-50%) rotate(-4deg);}
+100%{transform:translateY(-50%) rotate(0deg);} 
+}
+
+.character-left.show { 
+top:50%; 
+transform: translateY(50%); 
+opacity:1; 
+animation: shakeLeft 1.8s infinite ease-in-out; 
+}
+
+.character-right.show{ 
+top:50%; 
+transform: translateY(50%); 
+opacity:1; 
+animation: shakeLeft 1.8s infinite ease-in-out; 
+}
+
+.fast-shake{ 
+animation: fastShakeLeft 0.35s infinite ease-in-out !important; 
+}
+
+body { 
+margin: 0; 
+height: 100vh; 
+display: flex; 
+flex-direction: column; 
+justify-content: center; 
+align-items: center; 
+font-family: sans-serif; 
+background: #f9f3e7; 
+overflow: hidden; 
+}
+
+#container { 
+position: relative; 
+width: var(--box-width); 
+height: calc(var(--box-height) + var(--stick-height)); display: flex; 
+justify-content: center; 
+align-items: flex-end; 
+}
+
+#box { 
+width: var(--box-width); 
+height: var(--box-height); 
+background: url("body_img/bg/box.png") no-repeat center/contain; 
+background-size:100% 100%; 
+border-radius:8px; 
+position: relative; 
+z-index:25; 
+}
+
+#stick { 
+width: var(--stick-width); 
+height: var(--stick-height); 
+background:#fff; 
+border-radius:6px; 
+position:absolute; 
+left:50%; 
+transform:translateX(-50%); 
+bottom:0; 
+z-index:20; 
+display:flex; 
+justify-content:center; 
+align-items:flex-start;  
+transition: bottom 1s ease-out; 
+box-shadow:0 2px 5px rgba(0,0,0,0.2); 
+}
+
+#stickText { 
+font-size:18px; 
+margin-top:6px; 
+opacity:0; 
+transition: opacity 0.3s ease; 
+}
+
+@keyframes shakeBox { 
+0%{transform:rotate(0deg);}
+20%{transform:rotate(10deg);}
+40%{transform:rotate(-10deg);}
+60%{transform:rotate(6deg);}
+80%{transform:rotate(-6deg);}
+100%{transform:rotate(0deg);} 
+}
+
+.shaking { 
+animation: shakeBox 0.8s ease; 
+}
+
+#paperWrapper {
+  position:fixed;
+  top: 0px; /* 종이가 더 위에서 시작 */
+  left:50%;
+  width:400px;
+  height:800px;
+  padding: 0;
+  opacity:0;
+  background:url("body_img/result/paper_대길.png") no-repeat center/cover;
+  background-size:100% 100%;
+  border-radius:6px;
+  z-index:900;
+
+  /* 🔥 슬라이드 내려오기 애니메이션 */
+  transform: translate(-50%, -250px);
+  transition: transform 1s ease-out, opacity .6s ease;
+}
+#paperWrapper.show {
+  opacity:1;
+  transform: translate(-50%, 20px); /* box 앞쪽으로 떨어짐 */
+}
+
+#paperText {
+  padding: 40px 20px;
+  font-size: 0px;
+  opacity:0;
+  transition: opacity .8s ease .4s;
+}
+#paperText.show {
+  opacity:1;
+}
+
+button{ 
+padding:12px 24px; 
+font-size:16px; 
+background:#f9a825; 
+border:none; 
+border-radius:6px; 
+color:#fff; 
+font-weight:bold; 
+cursor:pointer; 
+box-shadow:0 3px 6px rgba(0,0,0,0.2); 
+}
+
+button:active{ 
+transform: scale(0.96); 
+}
+
+#draw{ 
+margin-top:40px; 
+z-index: 800; 
+}
+
+#resetBtn{ 
+position:absolute; 
+top: calc(100% + 140px); 
+left:50%; 
+transform:translateX(-50%); 
+display:none; 
+z-index:30; 
+width:300px; 
+padding:14px 0; 
+font-size:18px; 
+z-index: 800; 
+}
+
+#backToStartBtn{ 
+position:absolute; 
+top:10px; 
+left:10px; 
+width:200px; 
+padding:10px 18px; 
+font-size:14px; 
+background:#d9534f; 
+color:white; 
+border:none; 
+border-radius:6px; 
+cursor:pointer; 
+z-index:999; 
+box-shadow:0 3px 6px rgba(0,0,0,0.25); 
+}
+
+#backToStartBtn:active{ 
+transform: scale(0.95); 
+}
+
+#muteBtn{ 
+position:absolute; 
+top:10px; 
+left:220px; 
+width:60px; 
+padding:10px 18px; 
+font-size:14px; 
+background:#333; 
+color:white; 
+border:none; 
+border-radius:6px; 
+cursor:pointer; 
+z-index:999; 
+}
+
+#muteBtn:active{ 
+transform: scale(0.95); 
+}
+
+/* 파티클 */
+#particleArea{ 
+position: fixed; 
+top:0; 
+left:0; 
+width:100%; 
+height:100%; 
+pointer-events:none; 
+overflow:hidden; 
+z-index:999; 
+}
+
+.firework-particle{ 
+position:absolute; 
+width:8px; 
+height:8px; 
+background:white; 
+border-radius:50%; 
+opacity:1; 
+pointer-events:none; 
+animation: explode 1.2s ease-out forwards; 
+}
+
+@keyframes explode { 
+0%{transform:translate(0,0) scale(1); opacity:1;}
+100%{transform:translate(var(--dx), var(--dy)) scale(0.2); opacity:0;} }
+
+#paperParticleArea {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  z-index: 999;
+}
+
+.paper-particle {
+  position: absolute;
+  background: url("particle/particle_대길.png") no-repeat center / cover;
+  border-radius: 0;
+  opacity: 0;
+  animation: paperParticleAnim 1.9s ease-out forwards;
+}
+
+@keyframes paperParticleAnim {
+  0% {
+    transform: scale(0.4) translate(0, 0);
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.1) translate(var(--tx), var(--ty));
+    opacity: 0;
+  }
+}
+
+/* ---------- 방명록 스타일 (원본 유지) ---------- */
+:root{ 
+--bg:#f7f3e9; 
+--ink:#5c4a32; 
+--panel:#fffdfa; 
+--accent:#c8ba9e; 
+--btn:#d9cbaa; 
+}
+
+html,body{ 
+background:var(--bg); 
+color:var(--ink); 
+}
+
+/* 흐르는 텍스트 */
+@keyframes flow-right-to-left{ 0%{ transform: translateX(100vw);}100%{ transform: translateX(-120vw);} }
+
+.flow-text {
+  position: absolute;
+  white-space: nowrap;
+  font-weight: 500;
+  pointer-events: auto;
+  cursor: grab;
+  opacity: 0.9;
+  animation-name: flow-right-to-left;
+  animation-timing-function: linear;
+  z-index: 15;
+  display: inline-block;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  will-change: transform, left, top;
+
+  cursor: url("icon/flow_cursor.png") 4 4, grab !important;
+
+  background: #fffdfa;        /* 배경 */
+  border: 2px solid #5c4a32;  /* 테두리 */
+  border-radius: 10px;        /* 둥근 모서리 */
+  padding: 6px 10px;          /* 안쪽 여백 */
+}
+
+.flow-text.grabbing {
+  cursor: url("icon/flow_cursor_click.png") 4 4, grabbing !important;
+  animation-play-state: paused; /* 잡으면 흐름 멈춤 */
+}
+
+/* 패널 */
+#panel{ 
+position:fixed; 
+top:0; 
+right:-400px; 
+width:400px; 
+height:100vh; 
+background:var(--panel); 
+border-left:3px solid var(--accent); 
+box-shadow:-6px 0 18px rgba(0,0,0,0.08); 
+padding:20px; 
+box-sizing:border-box; 
+transition: right .35s ease; 
+overflow-y:auto; 
+z-index:1100; 
+}
+
+#panel h3{ 
+margin:0 0 14px; 
+font-size:18px; 
+color:#6d552f; 
+}
+
+.note-item{ 
+background:#fff9d9; 
+padding:10px; 
+margin-bottom:12px; 
+border:1px solid #d8c797; 
+border-radius:6px; 
+position:relative; 
+}
+
+.note-item .nick{ 
+font-weight:700; 
+margin-bottom:6px; 
+}
+
+.delete-btn{ 
+position:absolute; 
+padding: 4px 8px;
+right:8px; 
+top:8px; 
+background:none; 
+border:none; 
+color:#8a6e42; 
+cursor:pointer; 
+font-size:13px; 
+}
+
+/* 방명록 버튼 (game 화면에 배치) */
+#toggle{ 
+position:absolute; 
+right: 32px; 
+top: 10px; 
+background:#fff3b0; 
+border:2px 
+solid #c5b27b; 
+padding:10px 14px; 
+border-radius:8px; 
+cursor:pointer; 
+font-size:14px;  
+z-index:1101; 
+}
+
+/* 입력 영역 */
+.input-area{ 
+position:fixed; 
+left:20px; 
+bottom:20px; 
+right:50px; 
+display:flex; 
+gap:10px; 
+flex-direction:column; 
+z-index:500; 
+}
+
+textarea#msg{ 
+width:100%; 
+height:70px; 
+padding:10px; 
+border-radius:8px; 
+border:2px 
+dashed #c4b69b; 
+background:#fffef8; 
+resize:none; 
+font-size:15px; 
+}
+
+.row{ 
+display:flex; 
+gap:10px; 
+}
+
+.small-input{ 
+width:160px; 
+padding:8px; 
+border-radius:6px; 
+border:1px 
+solid #c8bba7; 
+background:#fffefc; 
+}
+
+button.primary{ 
+padding:10px 16px; 
+border-radius:8px; 
+border:2px 
+solid #9c8c6a; 
+background:var(--btn); 
+cursor:pointer; 
+font-weight:700; 
+}
+
+/* 흐르는 텍스트을 캐릭터 뒤로 위치시키기 위해 flowArea의 z-index를 character보다 낮게 유지 */
+#flowArea{ 
+position:fixed; 
+top:0; 
+left:0; 
+width:100%; 
+height:100%; 
+pointer-events:none; 
+z-index:18; 
+overflow:hidden; 
+}
+
+/* 반응형 간단 보정 */
+@media (max-width:800px){ 
+.character-left,.character-right{ display:none; } 
+
+#container{ transform:scale(0.9);} 
+#panel{ width:320px; right:-320px; } 
+.input-area{ right:340px; } }
+
+.character-left.pressed,
+.character-right.pressed {
+  animation: none !important;
+  transform: translateY(-50%) scale(0.85) !important;
+  transition: transform 0.12s ease;
+}
+
+/* 기본 슬라이더 외형 초기화 + 공통 설정 */
+input[type="range"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 150px;      /* 너 html에서 준 width */
+  height: 8px;       /* 트랙 높이 */
+  background: transparent;
+  cursor: pointer;
+  margin: 0;         /* 필요하면 조절 */
+}
+
+/* 트랙 (배경 막대) 스타일 — WebKit 계열 */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  background: #ccc;     /* 트랙 색상 */
+  border-radius: 4px;
+}
+
+/* thumb (슬라이더 손잡이) 스타일 — WebKit 계열 */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #ff9800;  /* 손잡이 색상 */
+  border-radius: 50%;   /* 원 모양 */
+  border: 2px solid #e67e22;  /* 테두리 */
+  margin-top: -5px;     /* 트랙 중앙 정렬 (트랙 높이에 따라 조절) */
+}
+
+/* Firefox 전용 스타일 (::-moz-*)  */
+input[type="range"]::-moz-range-track {
+  height: 8px;
+  background: #ccc;
+  border-radius: 4px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #ff9800;
+  border-radius: 50%;
+  border: 2px solid #e67e22;
+}
+
+/* 기본 슬라이더 외형 초기화 + 공통 설정 */
+input[type="range"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 150px;      /* 너 html에서 준 width */
+  height: 8px;       /* 트랙 높이 */
+  background: transparent;
+  cursor: pointer;
+  margin: 0;         /* 필요하면 조절 */
+}
+
+/* 트랙 (배경 막대) 스타일 — WebKit 계열 */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  background: #CCB189;     /* 트랙 색상 */
+  border-radius: 4px;
+}
+
+/* thumb (슬라이더 손잡이) 스타일 — WebKit 계열 */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #904943;  /* 손잡이 색상 */
+  border-radius: 50%;   /* 원 모양 */
+  border: 2px solid #4C3421;  /* 테두리 */
+  margin-top: -5px;     /* 트랙 중앙 정렬 (트랙 높이에 따라 조절) */
+}
+
+/* Firefox 전용 스타일 (::-moz-*)  */
+input[type="range"]::-moz-range-track {
+  height: 8px;
+  background: #ccc;
+  border-radius: 4px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #ff9800;
+  border-radius: 50%;
+  border: 2px solid #e67e22;
+}
+
+.sliderBox {
+  position: absolute;
+  top: 10px;
+  left: 290px;
+  width: 180px;
+
+  background: #F0E5D0;  /* 🎁 박스 배경 */
+  border-radius: 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 15px 10px;
+  border: 2px solid #C2B09C;
+}
+
+/* 확률 정보 버튼 */
+#probBtn{
+  position:absolute;
+  top:60px;
+  right:32px; /* 방명록 버튼 옆 */
+  padding:10px 14px;
+  font-size:14px;
+  border-radius:8px;
+  border:2px solid #c5b27b;
+  background:#fff3b0;
+  cursor:pointer;
+  z-index:1000;
+}
+
+/* 확률 패널 */
+#probPanel{
+  position:absolute;
+  top:60px;
+  right:32px;
+  width:260px;
+  background:#fffdfa;
+  border:2px solid #c8ba9e;
+  border-radius:10px;
+  padding:14px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.15);
+
+  /* 접힌 상태 */
+  max-height:0;
+  overflow:hidden;
+  opacity:0;
+  transform: translateY(-10px);
+  transition: all 0.35s ease;
+  z-index:999;
+}
+
+/* 펼쳐진 상태 */
+#probPanel.open{
+  max-height:300px;
+  opacity:1;
+  transform: translateY(0);
+}
+
+#probPanel h3{
+  margin:0 0 8px;
+  font-size:16px;
+}
+
+#probPanel ul{
+  padding-left:18px;
+  margin:0;
+}
+
+.smoke{
+  position: fixed;
+  top: 50%;
+  width: 500px;
+  height: 500px;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 60;
+  background: url("effect/smoke.png") center/contain no-repeat;
+  filter: blur(2px);
+  transform: translateY(-50%) scale(0.8);
+}
+
+#smokeLeft{
+  left: 40px;
+}
+
+#smokeRight{
+  right: 40px;
+}
+
+.smoke.show{
+  animation: smokeFade 0.6s ease-out forwards;
+}
+
+@keyframes smokeFade{
+  0%{
+    opacity: 0;
+    transform: translateY(-50%) scale(0.7);
+  }
+  40%{
+    opacity: 0.9;
+    transform: translateY(-50%) scale(1);
+  }
+  100%{
+    opacity: 0;
+    transform: translateY(-50%) scale(1.2);
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- 흐르는 텍스트 전용 영역 (캐릭터 뒤쪽) -->
+<div id="flowArea"></div>
+
+<!-- 캐릭터 이미지들 (원본) -->
+<img id="charLeft" class="character-left" src="character_img/left.png" alt="left">
+<img id="charRight" class="character-right" src="character_img/right.png" alt="right">
+
+<!-- 좌측 연기 -->
+<div id="smokeLeft" class="smoke"></div>
+
+<!-- 우측 연기 -->
+<div id="smokeRight" class="smoke"></div>
+
+<!-- 시작 화면 -->
+<div id="startScreen">
+<h1>오미쿠지</h1>
+<button id="startBtn" class="start-btn">시작하기</button>
+</div>
+
+<!-- 로딩 화면 -->
+<div id="loadingScreen">
+  <img id="loadingImg" src="character_img/loading/load_1.png" alt="loading">
+  <div id="loadingText" style="color:white; font-size:20px; margin-top:10px;"></div>
+  <div id="loadingBarWrap"><div id="loadingBar"></div></div>
+</div>
+
+<!-- 플레이 화면 -->
+<div id="gameScreen">
+
+  <button id="backToStartBtn">시작 화면으로 돌아가기</button>
+  <button id="muteBtn">🔊</button>
+<div class="sliderBox">
+  <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="1">
+</div>
+        <button id="toggle">📒 방명록</button>
+
+<button id="probBtn">확률 정보</button>
+
+<div id="probPanel">
+  <h3>🎯 점괘 확률 안내</h3>
+  <ul>
+    <li>대길 : 10%</li>
+    <li>중길 : 20%</li>
+    <li>소길 : 29%</li>
+    <li>소흉 : 25%</li>
+    <li>중흉 : 15%</li>
+    <li>대흉 : 1%</li>
+  </ul>
+</div>
+
+  <div id="container">
+    <div id="stick"><span id="stickText"></span></div>
+    <div id="box"></div>
+
+    <div id="paperWrapper"><div id="paperText"></div></div>
+
+<div id="paperParticleArea"></div>
+
+    <button id="resetBtn">점괘 다시보기</button>
+  </div>
+
+  <button id="draw">점괘 보기</button>
+
+  <!-- 파티클 영역 -->
+  <div id="particleArea"></div>
+
+  <!-- BGM -->
+<audio id="bgm" src="bgm/bg/main_bgm.mp3" loop></audio>
+<audio id="clickSound" src="bgm/bg/click.mp3"></audio>
+<audio id="startSound" src="bgm/bg/start.mp3"></audio>
+<audio id="shakeSound" src="bgm/bg/shake.mp3"></audio>
+<audio id="c_clickSound" src="bgm/bg/c_click.mp3"></audio>
+<audio id="bgm_대길" src="bgm/result/대길.mp3"></audio>
+<audio id="bgm_중길" src="bgm/result/중길.mp3"></audio>
+<audio id="bgm_소길" src="bgm/result/소길.mp3"></audio>
+<audio id="bgm_소흉" src="bgm/result/소흉.mp3"></audio>
+<audio id="bgm_중흉" src="bgm/result/중흉.mp3"></audio>
+<audio id="bgm_대흉" src="bgm/result/대흉.mp3"></audio>
+<audio id="boomL" src="bgm/result/boom-L.mp3"></audio>
+<audio id="boomR" src="bgm/result/boom-R.mp3"></audio>
+</div>
+
+<!-- 방명록 패널 (오른쪽에서 슬라이드) -->
+<div id="panel">
+
+    <h3>📑 방명록</h3>
+    <h4>*해당 기록들은 일정 기간 이상 보관 후 소실될 수 있습니다.*</h4>
+
+  <div id="list"></div>
+</div>
+
+<!-- 입력 영역 (원본 유지) -->
+<div class="input-area">
+  <div class="row">
+    <input id="nickPreview" class="small-input" disabled />
+    <button id="changeNickInline" class="primary" style="width:120px;">닉네임 수정</button>
+    <button id="send" class="primary" style="background:#b9d3a8;border-color:#93b183;">등록</button>
+  </div>
+  <textarea id="msg" placeholder="메모처럼 한 줄 남겨보세요 :)"></textarea>
+</div>
+
+<!-- 방명록 관련 스크립트 (Firebase 포함) -->
+<script type="module">
+
+let originalParent = null;
+let originalNextSibling = null;
+
+  // Firebase imports (원본 유지)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, onSnapshot,
+    deleteDoc, doc, serverTimestamp, orderBy, query
+  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDF4cfl2658vOEvGmVrAd2PZhb_GbRC83w",
+    authDomain: "guestbook-b1d14.firebaseapp.com",
+    projectId: "guestbook-b1d14",
+    storageBucket: "guestbook-b1d14.firebasestorage.app",
+    messagingSenderId: "655941756386",
+    appId: "1:655941756386:web:cb198da93a58f53e8e05bb",
+    measurementId: "G-4ZBLTP3SFD"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const toggle = document.getElementById('toggle');
+  const panel = document.getElementById('panel');
+  const list = document.getElementById('list');
+  const sendBtn = document.getElementById('send');
+  const msgInput = document.getElementById('msg');
+  const changeNickInline = document.getElementById('changeNickInline');
+  const nickPreview = document.getElementById('nickPreview');
+
+  const colRef = collection(db, "messages");
+  const messagesQuery = query(colRef, orderBy("time","desc"));
+
+  /* 닉네임 */
+  let myNick = localStorage.getItem('nickname');
+  function askNicknameIfNeeded(){
+    if(!myNick){
+      const input = prompt("닉네임을 입력해주세요:");
+      myNick = input && input.trim() ? input.trim() : "익명";
+      localStorage.setItem('nickname', myNick);
+    }
+    applyNick();
+  }
+  function applyNick(){ nickPreview.value = myNick; }
+  function changeNicknameFlow(){
+    const newNick = prompt("새 닉네임:", myNick);
+    if(!newNick) return;
+    myNick = newNick.trim();
+    localStorage.setItem('nickname', myNick);
+    applyNick();
+  }
+  askNicknameIfNeeded();
+changeNickInline.addEventListener("click", () => {
+    clickSound.currentTime = 0;
+    clickSound.play();
+
+    changeNicknameFlow(); 
+});
+
+const probBtn = document.getElementById("probBtn");
+const probPanel = document.getElementById("probPanel");
+
+let probOpen = false;
+
+probBtn.addEventListener("click", () => {
+  clickSound.currentTime = 0;
+  clickSound.play();
+
+  probOpen = !probOpen;
+  probPanel.classList.toggle("open", probOpen);
+  probBtn.textContent = probOpen ? "확률 닫기" : "확률 정보";
+});
+
+
+  /* 패널 토글 */
+  let open = false;
+  toggle.addEventListener("click", ()=>{ 
+  clickSound.currentTime = 0;
+  clickSound.play();
+  open = !open; 
+  panel.style.right = open ? "0px" : "-400px"; 
+  toggle.textContent = open ? "방명록 닫기" : "📒 방명록";
+});
+
+  const messagesMap = new Map();
+  const spawnerActive = new Map();
+
+  /* 메시지 등록 */
+  sendBtn.addEventListener('click', async ()=>{
+    clickSound.currentTime = 0;
+    clickSound.play();
+    const text = msgInput.value.trim();
+    if(!text){ alert("내용을 입력하세요."); return; }
+    await addDoc(colRef, { nick: myNick, text: text, time: serverTimestamp() });
+    msgInput.value="";
+  });
+
+  async function deleteMessage(id){ await deleteDoc(doc(db,"messages",id)); }
+
+  function escapeHtml(s){ return s.replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+  function makeNoteItem(id,data){
+    const el = document.createElement("div");
+    el.className = "note-item";
+    el.innerHTML = `\n      <div class="nick">${escapeHtml(data.nick)}</div>\n      <div class="text">${escapeHtml(data.text)}</div>\n      <button class="delete-btn">삭제</button>\n    `;
+    el.querySelector(".delete-btn").addEventListener("click", ()=>{ if(confirm("삭제할까요?")) deleteMessage(id); });
+    return el;
+  }
+
+  /* 흐르는 텍스트 스폰 - 변경: body가 아니라 #flowArea에 추가하여 캐릭터 뒤에 위치하게 함 */
+  function startSpawner(id){
+    if(spawnerActive.get(id)) return;
+    spawnerActive.set(id,true);
+
+    (function spawnLoop(){
+      if(!spawnerActive.get(id)) return;
+      const m = messagesMap.get(id);
+      if(!m){ spawnerActive.delete(id); return; }
+
+      const el = document.createElement("div");
+      el.className="flow-text";
+
+      const fontSize = Math.floor(Math.random()*12)+14;
+      const hue = Math.random()*20+20;
+      const sat = Math.random()*10+20;
+      const light = Math.random()*10+25;
+      el.style.color = `hsl(${hue} ${sat}% ${light}%)`;
+      el.style.fontSize = fontSize+"px";
+      el.style.top = (Math.random()*75+5)+"vh";
+
+      const duration = Math.random()*4+5;
+      el.style.animationDuration = duration+"s";
+
+      el.textContent = `${m.nick}: ${m.text}`;
+
+      const flowArea = document.getElementById('flowArea');
+      flowArea.appendChild(el);
+
+let removed = false;
+
+function scheduleRemove(delay = 1000) {
+  if (removed) return;
+  removed = true;
+
+  setTimeout(() => {
+    el.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+    el.style.opacity = "0";
+    el.style.transform = "scale(0.8) rotate(10deg)";
+setTimeout(() => {
+  el.remove();
+
+  // 🔥 다음 텍스트 다시 흘러가게
+  if (spawnerActive.get(id) && messagesMap.has(id)) {
+    const gap = Math.random() * 1500 + 800;
+    setTimeout(spawnLoop, gap);
+  } else {
+    spawnerActive.delete(id);
+  }
+
+}, 600);
+  }, delay);
+}
+
+let grabOffsetX = 0;
+let grabOffsetY = 0;
+
+// === 드래그 & 던지기 ===
+let startX = 0, startY = 0;
+let lastX = 0, lastY = 0;
+let velocityX = 0, velocityY = 0;
+let lastTime = 0;
+
+el.addEventListener("mousedown", (e) => {
+  el.dataset.dragging = "true";
+  el.dataset.dragged = "true";
+  el.classList.add("grabbing");
+
+  document.body.classList.add("dragging-cursor");
+
+  // 🔥 현재 화면 기준 위치
+  const rect = el.getBoundingClientRect();
+
+  // 🔥 마우스가 요소를 잡은 정확한 지점
+  grabOffsetX = e.clientX - rect.left;
+  grabOffsetY = e.clientY - rect.top;
+
+  // 🔥 애니메이션 완전 정지
+  el.style.animation = "none";
+  el.style.transform = "none";
+
+  // 🔥 원래 부모 기억
+  originalParent = el.parentNode;
+  originalNextSibling = el.nextSibling;
+
+  // 🔥 body로 이동
+  document.body.appendChild(el);
+
+  // 🔥 fixed 기준 위치 (튀지 않음)
+  el.style.position = "fixed";
+  el.style.left = rect.left + "px";
+  el.style.top  = rect.top  + "px";
+  el.style.zIndex = 2000;
+
+  el.style.visibility = "visible";
+  el.style.opacity = "1";
+  el.style.pointerEvents = "auto";
+
+  lastX = e.clientX;
+  lastY = e.clientY;
+  lastTime = performance.now();
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (el.dataset.dragging !== "true") return;
+
+  // 🔥 마우스 위치 - 잡은 지점
+  el.style.left = e.clientX - grabOffsetX + "px";
+  el.style.top  = e.clientY - grabOffsetY + "px";
+
+  const now = performance.now();
+  const dt = now - lastTime;
+
+  velocityX = (e.clientX - lastX) / dt;
+  velocityY = (e.clientY - lastY) / dt;
+
+  lastX = e.clientX;
+  lastY = e.clientY;
+  lastTime = now;
+});
+
+document.addEventListener("mouseup", () => {
+
+  if (el.dataset.dragging !== "true") return;
+  el.dataset.dragging = "false";
+  el.classList.remove("grabbing");
+
+// 🔥 원래 자리로 되돌리기
+if (originalParent) {
+  if (originalNextSibling) {
+    originalParent.insertBefore(el, originalNextSibling);
+  } else {
+    originalParent.appendChild(el);
+  }
+}
+el.style.zIndex = "";
+el.style.pointerEvents = "";
+el.style.visibility = "";
+
+  document.body.classList.remove("dragging-cursor");
+
+ scheduleRemove(1000);
+
+  let vx = velocityX * 60;
+  let vy = velocityY * 60;
+
+  const friction = 0.98;
+  const bounce = 0.85;
+
+  const rect = el.getBoundingClientRect();
+  let x = rect.left;
+  let y = rect.top;
+
+  function physicsLoop() {
+    vx *= friction;
+    vy *= friction;
+
+    x += vx;
+    y += vy;
+
+    const maxX = window.innerWidth - rect.width;
+    const maxY = window.innerHeight - rect.height;
+
+    let hit = false;
+
+    // 좌우 벽
+    if (x <= 0) {
+      x = 0;
+      vx *= -bounce;
+      hit = true;
+    } else if (x >= maxX) {
+      x = maxX;
+      vx *= -bounce;
+      hit = true;
+    }
+
+    // 상하 벽
+    if (y <= 0) {
+      y = 0;
+      vy *= -bounce;
+      hit = true;
+    } else if (y >= maxY) {
+      y = maxY;
+      vy *= -bounce;
+      hit = true;
+    }
+
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+
+if (hit) {
+  scheduleRemove(1000);
+}
+
+    // 계속 움직일 조건
+    if (Math.abs(vx) > 0.3 || Math.abs(vy) > 0.3) {
+      requestAnimationFrame(physicsLoop);
+    }
+  }
+
+  physicsLoop();
+});
+
+      el.addEventListener("animationend", ()=>{
+      if (el.dataset.dragged === "true") return;
+        el.remove();
+        if(spawnerActive.get(id) && messagesMap.has(id)){
+          const gap = Math.random()*1500+800;
+          setTimeout(spawnLoop, gap);
+        } else {
+          spawnerActive.delete(id);
+        }
+      });
+    })();
+  }
+
+  function stopSpawner(id){ spawnerActive.set(id,false); spawnerActive.delete(id); }
+
+  /* Firestore 실시간 반영 */
+  onSnapshot(messagesQuery, (snap)=>{
+    list.innerHTML="";
+    const newIds = new Set();
+
+    snap.forEach(docSnap=>{
+      const id = docSnap.id; const d = docSnap.data();
+      newIds.add(id);
+      messagesMap.set(id,{ id, nick: d.nick || "익명", text: d.text || "", time:d.time });
+    });
+
+    for(const id of Array.from(messagesMap.keys())){
+      if(!newIds.has(id)){ messagesMap.delete(id); stopSpawner(id); }
+    }
+
+    for(const [id,data] of messagesMap){ list.appendChild(makeNoteItem(id,data)); if(!spawnerActive.get(id)) startSpawner(id); }
+  });
+
+</script>
+
+<!-- 오미쿠지 메인 스크립트 (원본 기능들 전부 유지) -->
+<script>
+const startScreen = document.getElementById("startScreen");
+const loadingScreen = document.getElementById("loadingScreen");
+const loadingBar = document.getElementById("loadingBar");
+const gameScreen = document.getElementById("gameScreen");
+const startBtn = document.getElementById("startBtn");
+const box = document.getElementById("box");
+const stick = document.getElementById("stick");
+const stickText = document.getElementById("stickText");
+const paperWrapper = document.getElementById("paperWrapper");
+const paperText = document.getElementById("paperText");
+const btn = document.getElementById("draw");
+const resetBtn = document.getElementById("resetBtn");
+const loadingText = document.getElementById("loadingText");
+const charLeft = document.getElementById("charLeft");
+const charRight = document.getElementById("charRight");
+const bgm = document.getElementById("bgm");
+const clickSound = document.getElementById("clickSound");
+const c_clickSound = document.getElementById("c_clickSound");
+const startSound = document.getElementById("startSound");
+const shakeSound = document.getElementById("shakeSound");
+const volumeSlider = document.getElementById("volumeSlider");
+const smokeLeft  = document.getElementById("smokeLeft");
+const smokeRight = document.getElementById("smokeRight");
+const boomL = document.getElementById("boomL");
+const boomR = document.getElementById("boomR");
+
+// 시작할 때 기본값 동기화
+volumeSlider.value = bgm.volume;
+
+// 슬라이드할 때 볼륨 조절
+volumeSlider.addEventListener("input", () => {
+  bgm.volume = volumeSlider.value;
+});
+
+function changeCharacterWithSmokeByResult(result){
+
+  let targetSmoke = null;
+
+  if (result === "대길") {
+    targetSmoke = smokeRight;
+  }
+
+  if (result === "대흉") {
+    targetSmoke = smokeLeft;
+  }
+
+  // 연기 없는 결과는 바로 교체
+  if (!targetSmoke) {
+  if (resultCharacters[result]) {
+    charLeft.src  = resultCharacters[result].left;
+    charRight.src = resultCharacters[result].right;
+  }
+  return;
+}
+
+  // 연기 재생
+  targetSmoke.classList.remove("show");
+  void targetSmoke.offsetWidth;
+  targetSmoke.classList.add("show");
+
+  // 연기 중간에 캐릭터 교체
+  setTimeout(() => {
+    if (resultCharacters[result]) {
+      charLeft.src  = resultCharacters[result].left;
+      charRight.src = resultCharacters[result].right;
+    }
+  }, 260);
+}
+
+const resultCharacters = {
+  "대길": { left: "character_img/react/left_대길.png", right: "character_img/react/right_대길.png" },
+  "중길": { left: "character_img/react/left_중길.png", right: "character_img/react/right_중길.png" },
+  "소길": { left: "character_img/react/left_소길.png", right: "character_img/react/right_소길.png" },
+  "소흉": { left: "character_img/react/left_소흉.png", right: "character_img/react/right_소흉.png" },
+  "중흉": { left: "character_img/react/left_중흉.png", right: "character_img/react/right_중흉.png" },
+  "대흉": { left: "character_img/react/left_대흉.png", right: "character_img/react/right_대흉.png" }
+};
+
+function fadeVolume(audio, target, duration) {
+  const steps = 20;
+  const stepTime = duration / steps;
+  const startVolume = audio.volume;
+  const diff = target - startVolume;
+  let count = 0;
+
+  const fade = setInterval(() => {
+    count++;
+    audio.volume = startVolume + diff * (count / steps);
+    if (count >= steps) clearInterval(fade);
+  }, stepTime);
+}
+
+shakeSound.addEventListener("play", () => {
+  fadeVolume(bgm, 0.1, 300);
+});
+
+/* 시작하기 → 로딩 화면 → 게임 화면 */
+startBtn.addEventListener("click", () => {
+  bgm.volume = 0.4;
+  bgm.play();
+  startSound.currentTime = 0;
+  startSound.play();
+
+  startScreen.style.display = "none";
+  loadingScreen.style.display = "flex";
+
+  let progress = 0;
+  const messages = [
+    { percent: 0,   text: "점괘를 적어내는 중..." },
+    { percent: 30,  text: "통을 흔들어 보는 중..." },
+    { percent: 60,  text: "신령님께 기도하는 중..." },
+    { percent: 90, text: "준비 완료!" }
+  ];
+
+  const timer = setInterval(() => {
+    progress += 4;
+    loadingBar.style.width = progress + "%";
+
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (progress >= messages[i].percent) {
+        loadingText.textContent = messages[i].text;
+        break;
+      }
+    }
+
+    const loadingImg = document.getElementById("loadingImg");
+    if (progress < 30) loadingImg.src = "character_img/loading/load_1.png";
+    else if (progress < 60) loadingImg.src = "character_img/loading/load_2.png";
+    else if (progress < 90) loadingImg.src = "character_img/loading/load_3.png";
+    else loadingImg.src = "character_img/loading/load_4.png";
+
+    if (progress >= 100) {
+      clearInterval(timer);
+      setTimeout(() => {
+        loadingScreen.style.display = "none";
+        gameScreen.style.display = "flex";
+        charLeft.classList.add('show');
+        charRight.classList.add('show');
+      }, 200);
+    }
+  }, 80);
+});
+
+/* 확률 */
+const resultWeights = [
+  { result: "대길", weight: 10 },
+  { result: "중길", weight: 20 },
+  { result: "소길", weight: 29 },
+  { result: "소흉", weight: 25 },
+  { result: "중흉", weight: 15 },
+  { result: "대흉", weight: 1 }
+];
+
+// 가중치 랜덤 추출
+function pickWeightedResult() {
+  const totalWeight = resultWeights.reduce((s, i) => s + i.weight, 0);
+  let rand = Math.random() * totalWeight;
+
+  for (const item of resultWeights) {
+    if (rand < item.weight) return item.result;
+    rand -= item.weight;
+  }
+}
+
+const resultPaperImages = {
+  "대길":"body_img/result/paper_대길.png",
+  "중길":"body_img/result/paper_중길.png",
+  "소길":"body_img/result/paper_소길.png",
+  "소흉":"body_img/result/paper_소흉.png",
+  "중흉":"body_img/result/paper_중흉.png",
+  "대흉":"body_img/result/paper_대흉.png"
+};
+
+function spawnPaperParticles() {
+  const area = document.getElementById("paperParticleArea");
+  if (!area) return;
+
+  area.innerHTML = ""; // 기존 파티클 제거
+
+  const positions = [
+    { left: "-20%", top: "-20%" }, 
+    { left: "-50%", top: "20%" },
+    { left: "110%", top: "80%" },
+    { left: "110%", top: "110%" },
+  ];
+
+  positions.forEach(pos => {
+
+    // 위치마다 개수 다르게 (1~3개)
+    const count = 1 + Math.floor(Math.random() * 2);
+
+    for (let i = 0; i < count; i++) {
+
+      const p = document.createElement("div");
+      p.classList.add("paper-particle");
+
+      /* ⭐ 랜덤 크기 (40px ~ 120px) */
+      const size = 40 + Math.random() * 80;  
+      p.style.width = size + "px";
+      p.style.height = size + "px";
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 40 + Math.random() * 40;
+
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance;
+
+      p.style.setProperty("--tx", `${tx}px`);
+      p.style.setProperty("--ty", `${ty}px`);
+
+      p.style.left = pos.left;
+      p.style.top = pos.top;
+
+      area.appendChild(p);
+
+      p.addEventListener("animationend", () => p.remove());
+    }
+  });
+}
+
+let isTouchChangeEnabled = true;
+
+/* ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ */
+/* ================== 클릭 변경 보호 시스템 추가 ================== */
+
+let isResultShown = false;   // 결과 표시 중인지
+let leftTimer = null;
+let rightTimer = null;
+let leftBusy = false;
+let rightBusy = false;
+
+// 5초 동안 임시 이미지 적용
+function tempChangeCharacter(targetImg, newSrc, duration, setBusy) {
+
+  // 클릭 타이머 중복 방지 → 기존 타이머 취소
+  if (targetImg === charLeft && leftTimer) {
+    clearTimeout(leftTimer); leftTimer = null;
+  }
+  if (targetImg === charRight && rightTimer) {
+    clearTimeout(rightTimer); rightTimer = null;
+  }
+
+  const originalSrc = targetImg.src;
+  targetImg.src = newSrc;
+
+  const timer = setTimeout(() => {
+
+    // ⭐ 결과가 나온 뒤라면 "원래 이미지로 되돌리지 않음"
+    if (!isResultShown) {
+      targetImg.src = originalSrc;
+    }
+
+    setBusy(false);
+
+    if (targetImg === charLeft) leftTimer = null;
+    if (targetImg === charRight) rightTimer = null;
+
+  }, duration);
+
+  if (targetImg === charLeft) leftTimer = timer;
+  if (targetImg === charRight) rightTimer = timer;
+}
+
+// 클릭 눌림 효과 (항상)
+function pressEffect(target) {
+  target.classList.add("pressed");
+  setTimeout(() => target.classList.remove("pressed"), 150);
+}
+
+/* ================== 클릭 변경 보호 END ================== */
+/* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
+
+btn.addEventListener("click", () => {
+  clickSound.currentTime = 0;
+  clickSound.play();
+
+  shakeSound.currentTime = 0;
+  shakeSound.play();
+
+  setTimeout(() => { shakeSound.pause(); shakeSound.currentTime = 0; }, 1000);
+
+  /* ===== click 타이머 즉시 중지(핵심코드) ===== */
+  if (leftTimer) { clearTimeout(leftTimer); leftTimer = null; }
+  if (rightTimer) { clearTimeout(rightTimer); rightTimer = null; }
+  leftBusy = false;
+  rightBusy = false;
+  isResultShown = false;   // 새로운 흔들기 시작 → 결과 상태 초기화
+  isTouchChangeEnabled = false;
+  /* ============================================== */
+
+  charLeft.src = "character_img/left_react.png"; 
+  charRight.src = "character_img/right_react.png";
+
+  charLeft.classList.add("fast-shake");
+  charRight.classList.add("fast-shake");
+
+  setTimeout(() => {
+    charLeft.classList.remove("fast-shake");
+    charRight.classList.remove("fast-shake");
+  }, 900);
+
+  resetBtn.style.display = "none";
+
+  const boxHeight = box.offsetHeight;
+  stick.style.bottom = `${boxHeight - 200}px`;
+  stickText.style.opacity = 0;
+  box.classList.add("shaking");
+
+  setTimeout(() => {
+    box.classList.remove("shaking");
+    stick.style.bottom = `${boxHeight - 10}px`;
+
+    setTimeout(() => {
+
+      const result = pickWeightedResult();
+      stickText.textContent = result;
+      stickText.style.opacity = 1;
+
+      playResultBgm(result);
+
+if (result === "대길") {
+  boomR.volume = 0.1;
+  boomR.currentTime = 0;
+  boomR.play();
+}
+
+if (result === "대흉") {
+  boomL.volume = 0.1;
+  boomL.currentTime = 0;
+  boomL.play();
+}
+
+changeCharacterWithSmokeByResult(result);
+
+      /* ==== 결과 상태 진입 (클릭 타이머가 더는 작동 못하게) ==== */
+      if (leftTimer) { clearTimeout(leftTimer); leftTimer = null; }
+      if (rightTimer) { clearTimeout(rightTimer); rightTimer = null; }
+      leftBusy = false;
+      rightBusy = false;
+      /* ========================================================= */
+
+      paperWrapper.style.background = `url("${resultPaperImages[result]}") no-repeat center/contain`;
+      paperText.textContent = result;
+
+      paperWrapper.classList.add("show");
+      paperText.classList.add("show");
+
+      if (result === "대길") spawnPaperParticles();
+
+setTimeout(() => {
+    resetBtn.style.display = "block";
+    isResultShown = true;   //
+}, 300);
+
+    }, 900);
+  }, 800);
+});
+
+/* reset 버튼 */
+resetBtn.addEventListener("click", () => {
+  clickSound.currentTime = 0;
+  clickSound.play();
+
+  isResultShown = false;
+  isTouchChangeEnabled = true;
+
+  if (leftTimer) { clearTimeout(leftTimer); leftTimer = null; }
+  if (rightTimer) { clearTimeout(rightTimer); rightTimer = null; }
+  leftBusy = rightBusy = false;
+
+  charLeft.src = "character_img/left.png";
+  charRight.src = "character_img/right.png";
+  stick.style.bottom = "0px";
+  stickText.style.opacity = 0;
+  paperWrapper.classList.remove("show");
+  paperText.classList.remove("show");
+  resetBtn.style.display = "none";
+});
+
+/* 캐릭터 클릭 */
+charLeft.addEventListener("click", () => {
+  pressEffect(charLeft);
+  c_clickSound.currentTime = 0;
+  c_clickSound.play();
+  if (!isTouchChangeEnabled) return;
+  if (leftBusy) return;
+  leftBusy = true;
+  tempChangeCharacter(charLeft, "character_img/react/left_클릭.png", 5000, (v) => leftBusy = v);
+});
+charRight.addEventListener("click", () => {
+  pressEffect(charRight);
+  c_clickSound.currentTime = 0;
+  c_clickSound.play();
+  if (!isTouchChangeEnabled) return;
+  if (rightBusy) return;
+  rightBusy = true;
+  tempChangeCharacter(charRight, "character_img/react/right_클릭.png", 5000, (v) => rightBusy = v);
+});
+
+/* 뒤로가기 */
+const backToStartBtn = document.getElementById("backToStartBtn");
+backToStartBtn.addEventListener("click", () => {
+  clickSound.currentTime = 0;
+  clickSound.play();
+  bgm.pause();
+  bgm.currentTime = 0;
+
+  isResultShown = false;
+  if (leftTimer) { clearTimeout(leftTimer); leftTimer = null; }
+  if (rightTimer) { clearTimeout(rightTimer); rightTimer = null; }
+  leftBusy = rightBusy = false;
+
+  resetBtn.click();
+  gameScreen.style.display = "none";
+  startScreen.style.display = "flex";
+  charLeft.classList.remove("show");
+  charRight.classList.remove("show");
+
+  panel.style.right = "-400px";
+});
+
+/* 음소거 */
+const muteBtn = document.getElementById("muteBtn");
+muteBtn.addEventListener("click", () => {
+  bgm.muted = !bgm.muted;
+  muteBtn.textContent = bgm.muted ? "🔇" : "🔊";
+});
+
+/* BGM */
+function playResultBgm(result) {
+  const bgmGreat = document.getElementById("bgm_대길");
+  const bgmMid   = document.getElementById("bgm_중길");
+  const bgmSmall = document.getElementById("bgm_소길");
+  const bgmBad   = document.getElementById("bgm_소흉");
+  const bgmMidBad = document.getElementById("bgm_중흉");
+  const bgmVeryBad = document.getElementById("bgm_대흉");
+
+  const bgmList = [bgmGreat, bgmMid, bgmSmall, bgmBad, bgmMidBad, bgmVeryBad];
+  bgmList.forEach(b => { if (b) { b.pause(); b.currentTime = 0; } });
+
+  let target = null;
+  switch (result) {
+    case "대길": target = bgmGreat; break;
+    case "중길": target = bgmMid; break;
+    case "소길": target = bgmSmall; break;
+    case "소흉": target = bgmBad; break;
+    case "중흉": target = bgmMidBad; break;
+    case "대흉": target = bgmVeryBad; break;
+  }
+
+  if (!target) return;
+
+  target.volume = 0.4;
+  target.play();
+
+  target.onended = () => fadeVolume(bgm, volumeSlider.value, 400);
+}
+</script>
+</body>
+</html>
+
