@@ -50,7 +50,7 @@ html, body, *:active { cursor: url("icon/cursor2.png") 2 2, auto !important; }
   justify-content: center;
   align-items: center;
   z-index: 999;
-  background: url("body_img/bg/start_bg.png") no-repeat center/cover;
+  background: url("body_img/bg/start_bg.webp") no-repeat center/cover;
 }
 
 #startBtn { 
@@ -120,7 +120,7 @@ flex-direction: column;
 justify-content: center; 
 align-items: center; 
 position: relative; 
-background: url("body_img/bg/game_bg.png") no-repeat center/cover; 
+background: url("body_img/bg/game_bg.webp") no-repeat center/cover; 
 width: 100%; 
 height: 100%; 
 }
@@ -223,7 +223,7 @@ align-items: flex-end;
 #box { 
 width: var(--box-width); 
 height: var(--box-height); 
-background: url("body_img/bg/box.png") no-repeat center/contain; 
+background: url("body_img/bg/box.webp") no-repeat center/contain; 
 background-size:100% 100%; 
 border-radius:8px; 
 position: relative; 
@@ -275,7 +275,7 @@ animation: shakeBox 0.8s ease;
   height:800px;
   padding: 0;
   opacity:0;
-  background:url("body_img/result/paper_대길.png") no-repeat center/cover;
+  background:url("body_img/result/paper_대길.webp") no-repeat center/cover;
   background-size:100% 100%;
   border-radius:6px;
   z-index:900;
@@ -412,7 +412,7 @@ animation: explode 1.2s ease-out forwards;
 
 .paper-particle {
   position: absolute;
-  background: url("particle/particle_대길.png") no-repeat center / cover;
+  background: url("particle/particle_대길.webp") no-repeat center / cover;
   border-radius: 0;
   opacity: 0;
   animation: paperParticleAnim 1.9s ease-out forwards;
@@ -784,7 +784,7 @@ input[type="range"]::-moz-range-thumb {
   pointer-events: none;
   opacity: 0;
   z-index: 60;
-  background: url("effect/smoke.png") center/contain no-repeat;
+  background: url("effect/smoke.webp") center/contain no-repeat;
   filter: blur(2px);
   transform: translateY(-50%) scale(0.8);
 }
@@ -824,8 +824,8 @@ input[type="range"]::-moz-range-thumb {
 <div id="flowArea"></div>
 
 <!-- 캐릭터 이미지들 (원본) -->
-<img id="charLeft" class="character-left" src="character_img/left.png" alt="left">
-<img id="charRight" class="character-right" src="character_img/right.png" alt="right">
+<img id="charLeft" class="character-left" src="character_img/left.webp" alt="left">
+<img id="charRight" class="character-right" src="character_img/right.webp" alt="right">
 
 <!-- 좌측 연기 -->
 <div id="smokeLeft" class="smoke"></div>
@@ -841,7 +841,7 @@ input[type="range"]::-moz-range-thumb {
 
 <!-- 로딩 화면 -->
 <div id="loadingScreen">
-  <img id="loadingImg" src="character_img/loading/load_1.png" alt="loading">
+  <img id="loadingImg" src="character_img/loading/load_1.webp" alt="loading">
   <div id="loadingText" style="color:white; font-size:20px; margin-top:10px;"></div>
   <div id="loadingBarWrap"><div id="loadingBar"></div></div>
 </div>
@@ -1352,12 +1352,12 @@ function changeCharacterWithSmokeByResult(result){
 }
 
 const resultCharacters = {
-  "대길": { left: "character_img/react/left_대길.png", right: "character_img/react/right_대길.png" },
-  "중길": { left: "character_img/react/left_중길.png", right: "character_img/react/right_중길.png" },
-  "소길": { left: "character_img/react/left_소길.png", right: "character_img/react/right_소길.png" },
-  "소흉": { left: "character_img/react/left_소흉.png", right: "character_img/react/right_소흉.png" },
-  "중흉": { left: "character_img/react/left_중흉.png", right: "character_img/react/right_중흉.png" },
-  "대흉": { left: "character_img/react/left_대흉.png", right: "character_img/react/right_대흉.png" }
+  "대길": { left: "character_img/react/left_대길.webp", right: "character_img/react/right_대길.webp" },
+  "중길": { left: "character_img/react/left_중길.webp", right: "character_img/react/right_중길.webp" },
+  "소길": { left: "character_img/react/left_소길.webp", right: "character_img/react/right_소길.webp" },
+  "소흉": { left: "character_img/react/left_소흉.webp", right: "character_img/react/right_소흉.webp" },
+  "중흉": { left: "character_img/react/left_중흉.webp", right: "character_img/react/right_중흉.webp" },
+  "대흉": { left: "character_img/react/left_대흉.webp", right: "character_img/react/right_대흉.webp" }
 };
 
 function fadeVolume(audio, target, duration) {
@@ -1390,10 +1390,10 @@ startBtn.addEventListener("click", async () => {
   loadingScreen.style.display = "flex";
 
   await Promise.all([
-    preloadImage("character_img/left.png"),
-    preloadImage("character_img/right.png"),
-    preloadImage("body_img/bg/game_bg.png"),
-    preloadImage("body_img/bg/box.png")
+    preloadImage("character_img/left.webp"),
+    preloadImage("character_img/right.webp"),
+    preloadImage("body_img/bg/game_bg.webp"),
+    preloadImage("body_img/bg/box.webp")
   ]);
 
   let progress = 0;
@@ -1416,10 +1416,10 @@ startBtn.addEventListener("click", async () => {
     }
 
     const loadingImg = document.getElementById("loadingImg");
-    if (progress < 30) loadingImg.src = "character_img/loading/load_1.png";
-    else if (progress < 60) loadingImg.src = "character_img/loading/load_2.png";
-    else if (progress < 90) loadingImg.src = "character_img/loading/load_3.png";
-    else loadingImg.src = "character_img/loading/load_4.png";
+    if (progress < 30) loadingImg.src = "character_img/loading/load_1.webp";
+    else if (progress < 60) loadingImg.src = "character_img/loading/load_2.webp";
+    else if (progress < 90) loadingImg.src = "character_img/loading/load_3.webp";
+    else loadingImg.src = "character_img/loading/load_4.webp";
 
     if (progress >= 100) {
       clearInterval(timer);
@@ -1455,12 +1455,12 @@ function pickWeightedResult() {
 }
 
 const resultPaperImages = {
-  "대길":"body_img/result/paper_대길.png",
-  "중길":"body_img/result/paper_중길.png",
-  "소길":"body_img/result/paper_소길.png",
-  "소흉":"body_img/result/paper_소흉.png",
-  "중흉":"body_img/result/paper_중흉.png",
-  "대흉":"body_img/result/paper_대흉.png"
+  "대길":"body_img/result/paper_대길.webp",
+  "중길":"body_img/result/paper_중길.webp",
+  "소길":"body_img/result/paper_소길.webp",
+  "소흉":"body_img/result/paper_소흉.webp",
+  "중흉":"body_img/result/paper_중흉.webp",
+  "대흉":"body_img/result/paper_대흉.webp"
 };
 
 function spawnPaperParticles() {
@@ -1580,8 +1580,8 @@ btn.addEventListener("click", () => {
   isTouchChangeEnabled = false;
   /* ============================================== */
 
-  charLeft.src = "character_img/left_react.png"; 
-  charRight.src = "character_img/right_react.png";
+  charLeft.src = "character_img/left_react.webp"; 
+  charRight.src = "character_img/right_react.webp";
 
   charLeft.classList.add("fast-shake");
   charRight.classList.add("fast-shake");
@@ -1660,8 +1660,8 @@ resetBtn.addEventListener("click", () => {
   if (rightTimer) { clearTimeout(rightTimer); rightTimer = null; }
   leftBusy = rightBusy = false;
 
-  charLeft.src = "character_img/left.png";
-  charRight.src = "character_img/right.png";
+  charLeft.src = "character_img/left.webp";
+  charRight.src = "character_img/right.webp";
   stick.style.bottom = "0px";
   stickText.style.opacity = 0;
   paperWrapper.classList.remove("show");
@@ -1677,7 +1677,7 @@ charLeft.addEventListener("click", () => {
   if (!isTouchChangeEnabled) return;
   if (leftBusy) return;
   leftBusy = true;
-  tempChangeCharacter(charLeft, "character_img/react/left_클릭.png", 5000, (v) => leftBusy = v);
+  tempChangeCharacter(charLeft, "character_img/react/left_클릭.webp", 5000, (v) => leftBusy = v);
 });
 charRight.addEventListener("click", () => {
   pressEffect(charRight);
@@ -1686,7 +1686,7 @@ charRight.addEventListener("click", () => {
   if (!isTouchChangeEnabled) return;
   if (rightBusy) return;
   rightBusy = true;
-  tempChangeCharacter(charRight, "character_img/react/right_클릭.png", 5000, (v) => rightBusy = v);
+  tempChangeCharacter(charRight, "character_img/react/right_클릭.webp", 5000, (v) => rightBusy = v);
 });
 
 /* 뒤로가기 */
@@ -1750,5 +1750,7 @@ function playResultBgm(result) {
 </script>
 </body>
 </html>
+
+
 
 
