@@ -1117,34 +1117,26 @@ let lastTime = 0;
 
 el.addEventListener("mousedown", (e) => {
   el.dataset.dragging = "true";
-  el.dataset.dragged = "true";
   el.classList.add("grabbing");
 
-  document.body.classList.add("dragging-cursor");
-
-  // 🔥 현재 화면 기준 위치
+  // 🔥 현재 화면에 보이는 좌표 (애니메이션 포함)
   const rect = el.getBoundingClientRect();
 
-  // 🔥 마우스가 요소를 잡은 정확한 지점
+  // 🔥 grab 위치
   grabOffsetX = e.clientX - rect.left;
   grabOffsetY = e.clientY - rect.top;
 
-  // 🔥 애니메이션 완전 정지
-  el.style.animation = "none";
-  el.style.transform = "none";
-
-  // 🔥 원래 부모 기억
-  originalParent = el.parentNode;
-  originalNextSibling = el.nextSibling;
-
-  // 🔥 body로 이동
-  document.body.appendChild(el);
-
-  // 🔥 fixed 기준 위치 (튀지 않음)
+  // 🔥 먼저 fixed + 현재 좌표 고정 (애니메이션 유지 상태)
   el.style.position = "fixed";
   el.style.left = rect.left + "px";
   el.style.top  = rect.top  + "px";
   el.style.zIndex = 2000;
+
+  // 🔥 다음 프레임에서 애니메이션 제거 (튐 없음)
+  requestAnimationFrame(() => {
+    el.style.animation = "none";
+    el.style.transform = "none";
+  });
 
   el.style.visibility = "visible";
   el.style.opacity = "1";
@@ -1153,8 +1145,8 @@ el.addEventListener("mousedown", (e) => {
   lastX = e.clientX;
   lastY = e.clientY;
   lastTime = performance.now();
-});
-
+});  
+      
 document.addEventListener("mousemove", (e) => {
   if (el.dataset.dragging !== "true") return;
 
@@ -1759,6 +1751,7 @@ function playResultBgm(result) {
 </script>
 </body>
 </html>
+
 
 
 
