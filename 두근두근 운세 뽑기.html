@@ -53,6 +53,14 @@ html, body, *:active { cursor: url("icon/cursor2.png") 2 2, auto !important; }
   background: url("body_img/bg/start_bg.webp") no-repeat center/cover;
 }
 
+#titleImg{
+  width: 600px;          /* 타이틀 이미지 크기 */
+  max-width: 80vw;       /* 모바일 대응 */
+  margin-top: -100px;
+  margin-bottom: 30px;  /* 버튼과 간격 */
+  pointer-events: none; /* 클릭 방해 방지 */
+}
+
 #startBtn { 
 padding: 14px 26px; 
 background: #ef5350; 
@@ -62,6 +70,7 @@ color: white;
 border: none; 
 cursor: pointer; 
 box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+margin-top: -50px;
 } 
 
 #startBtn:active { 
@@ -835,7 +844,7 @@ input[type="range"]::-moz-range-thumb {
 
 <!-- 시작 화면 -->
 <div id="startScreen">
-<h1>오미쿠지</h1>
+<img src="body_img/bg/타이틀.webp" alt="오미쿠지" id="titleImg">
 <button id="startBtn" class="start-btn">시작하기</button>
 </div>
 
@@ -1750,6 +1759,7 @@ function playResultBgm(result) {
 </script>
 </body>
 </html>
+
 
 
 
