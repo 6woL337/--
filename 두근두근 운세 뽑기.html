@@ -825,6 +825,23 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+/* 🔥 특정 닉네임용 스타일 */
+.flow-text.special {
+  background: #ffe4e1;        /* 박스 배경색 변경 */
+  border-color: #d9534f;      /* 테두리 색 */
+  color: #8b0000;             /* 글자 색 */
+}
+
+.note-item.special-note {
+  background: #ffe4e1;
+  border-color: #d9534f;
+}
+
+.note-item.special-note .text {
+  font-weight: 600;
+  color: #8b0000;
+}
+  
 </style>
 </head>
 <body>
@@ -1030,6 +1047,19 @@ probBtn.addEventListener("click", () => {
   const messagesMap = new Map();
   const spawnerActive = new Map();
 
+// 🔥 닉네임 정규화 (전역)
+function normalizeNick(nick) {
+  return (nick || "")
+    .normalize("NFC")
+    .replace(/[\s\u200b-\u200d\ufeff]/g, "");
+}
+
+// 🔥 특정 닉네임 목록 (전역)
+const SPECIAL_NICK = [
+  "원준식전도시락폭탄두리치킨더조이",
+  "메이드쟝강준호"
+].map(normalizeNick);
+  
   /* 메시지 등록 */
   sendBtn.addEventListener('click', async ()=>{
     clickSound.currentTime = 0;
@@ -1044,13 +1074,35 @@ probBtn.addEventListener("click", () => {
 
   function escapeHtml(s){ return s.replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
 
-  function makeNoteItem(id,data){
-    const el = document.createElement("div");
-    el.className = "note-item";
-    el.innerHTML = `\n      <div class="nick">${escapeHtml(data.nick)}</div>\n      <div class="text">${escapeHtml(data.text)}</div>\n      <button class="delete-btn">삭제</button>\n    `;
-    el.querySelector(".delete-btn").addEventListener("click", ()=>{ if(confirm("삭제할까요?")) deleteMessage(id); });
-    return el;
+function makeNoteItem(id, data) {
+  const el = document.createElement("div");
+  el.className = "note-item";
+
+  const nickNormalized = normalizeNick(data.nick || "");
+  const isSpecial = SPECIAL_NICK.includes(nickNormalized);
+
+  if (isSpecial) {
+    // ✅ 닉네임 숨김
+    el.innerHTML = `
+      <div class="text">${escapeHtml(data.text)}</div>
+      <button class="delete-btn">삭제</button>
+    `;
+    el.classList.add("special-note"); // (선택)
+  } else {
+    // 일반 유저
+    el.innerHTML = `
+      <div class="nick">${escapeHtml(data.nick)}</div>
+      <div class="text">${escapeHtml(data.text)}</div>
+      <button class="delete-btn">삭제</button>
+    `;
   }
+
+  el.querySelector(".delete-btn").addEventListener("click", () => {
+    if (confirm("삭제할까요?")) deleteMessage(id);
+  });
+
+  return el;
+}
 
   /* 흐르는 텍스트 스폰 - 변경: body가 아니라 #flowArea에 추가하여 캐릭터 뒤에 위치하게 함 */
   function startSpawner(id){
@@ -1076,7 +1128,20 @@ probBtn.addEventListener("click", () => {
       const duration = Math.random()*4+5;
       el.style.animationDuration = duration+"s";
 
-      el.textContent = `${m.nick}: ${m.text}`;
+const nick = normalizeNick(m.nick);
+
+const SPECIAL_NICK = [
+  "원준식전도시락폭탄두리치킨더조이",
+  "메이드쟝강준호"
+].map(normalizeNick);
+
+if (SPECIAL_NICK.includes(nick)) {
+  el.classList.add("special");
+  el.textContent = m.text;   // ✅ 닉네임 숨김
+} else {
+  el.style.color = `hsl(${hue} ${sat}% ${light}%)`;
+  el.textContent = `${m.nick}: ${m.text}`;
+}
 
       const flowArea = document.getElementById('flowArea');
       flowArea.appendChild(el);
@@ -1751,6 +1816,7 @@ function playResultBgm(result) {
 </script>
 </body>
 </html>
+
 
 
 
