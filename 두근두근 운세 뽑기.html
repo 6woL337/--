@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="icon/favicon.png">
-<title>두근두근 운세 뽑기</title>
+<title>두근두근 운세 보기</title>
 
 <style>
 
@@ -421,7 +421,7 @@ animation: explode 1.2s ease-out forwards;
 
 .paper-particle {
   position: absolute;
-  background: url("particle/particle_대길.png") no-repeat center / cover;
+  background: url("particle/particle_대길.webp") no-repeat center / cover;
   border-radius: 0;
   opacity: 0;
   animation: paperParticleAnim 1.9s ease-out forwards;
@@ -473,6 +473,7 @@ color:var(--ink);
   -webkit-user-select: none;
   -ms-user-select: none;
   will-change: transform, left, top;
+  transform-origin: top left;
 
   cursor: url("icon/flow_cursor.png") 4 4, grab !important;
 
@@ -606,7 +607,7 @@ top:0;
 left:0; 
 width:100%; 
 height:100%; 
-pointer-events:none; 
+pointer-events:auto;
 z-index:18; 
 overflow:hidden; 
 }
@@ -825,23 +826,30 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+#dragLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999; 
+}
+
 /* 🔥 특정 닉네임용 스타일 */
 .flow-text.special {
   background: #86abd9;        /* 박스 배경색 변경 */
-  border-color: #558bcf;      /* 테두리 색 */
-  color: #090f85;             /* 글자 색 */
+  border-color: #131cc7;      /* 테두리 색 */
+  color: #131cc7;             /* 글자 색 */
 }
 
 .note-item.special-note {
   background: #86abd9;
-  border-color: #558bcf;
+  border-color: #131cc7;
 }
 
 .note-item.special-note .text {
   font-weight: 600;
-  color: #090f85;
+  color: #131cc7;
 }
-  
+
 </style>
 </head>
 <body>
@@ -888,11 +896,11 @@ input[type="range"]::-moz-range-thumb {
   <h3>🎯 점괘 확률 안내</h3>
   <ul>
     <li>대길 : 10%</li>
-    <li>중길 : 15%</li>
-    <li>소길 : 25%</li>
+    <li>중길 : 20%</li>
+    <li>소길 : 29%</li>
     <li>소흉 : 25%</li>
     <li>중흉 : 15%</li>
-    <li>대흉 : 10%</li>
+    <li>대흉 : 1%</li>
   </ul>
 </div>
 
@@ -1044,6 +1052,37 @@ probBtn.addEventListener("click", () => {
   toggle.textContent = open ? "방명록 닫기" : "📒 방명록";
 });
 
+const SPECIAL_NICK_MAP = {
+  [normalizeNick("원준식전도시락폭탄두리치킨더조이")]: {
+    label: "관리자_원",
+    color: "#131cc7"
+  },
+  [normalizeNick("메이드쟝강준호")]: {
+    label: "관리자_강",
+    color: "#131cc7"
+  }
+};
+
+const EASTER_EGG_NICK_MAP = {
+  [normalizeNick("강준호")]: "게이",
+  [normalizeNick("게이")]: "강준호",
+  [normalizeNick("원준")]: "나원준아니다"
+};
+
+function getDisplayNick(rawNick) {
+  const n = normalizeNick(rawNick);
+
+  if (SPECIAL_NICK_MAP[n]) {
+    return SPECIAL_NICK_MAP[n].label;
+  }
+
+  if (EASTER_EGG_NICK_MAP[n]) {
+    return EASTER_EGG_NICK_MAP[n];
+  }
+
+  return rawNick;
+}
+
   const messagesMap = new Map();
   const spawnerActive = new Map();
 
@@ -1059,7 +1098,7 @@ const SPECIAL_NICK = [
   "원준식전도시락폭탄두리치킨더조이",
   "메이드쟝강준호"
 ].map(normalizeNick);
-  
+
   /* 메시지 등록 */
   sendBtn.addEventListener('click', async ()=>{
     clickSound.currentTime = 0;
@@ -1081,17 +1120,24 @@ function makeNoteItem(id, data) {
   const nickNormalized = normalizeNick(data.nick || "");
   const isSpecial = SPECIAL_NICK.includes(nickNormalized);
 
-  if (isSpecial) {
-    // ✅ 닉네임 숨김
-    el.innerHTML = `
-      <div class="text">${escapeHtml(data.text)}</div>
-      <button class="delete-btn">삭제</button>
-    `;
-    el.classList.add("special-note"); // (선택)
-  } else {
+if (isSpecial) {
+  const info = SPECIAL_NICK_MAP[nickNormalized];
+  const fakeNick = info?.label || "❓비밀닉네임";
+  const nickColor = info?.color || "";
+
+  el.innerHTML = `
+    <div class="nick" style="color:${nickColor}">
+      ${fakeNick}
+    </div>
+    <div class="text">${escapeHtml(data.text)}</div>
+    <button class="delete-btn">삭제</button>
+  `;
+  el.classList.add("special-note");
+}
+ else {
     // 일반 유저
     el.innerHTML = `
-      <div class="nick">${escapeHtml(data.nick)}</div>
+<div class="nick">${escapeHtml(getDisplayNick(data.nick))}</div>
       <div class="text">${escapeHtml(data.text)}</div>
       <button class="delete-btn">삭제</button>
     `;
@@ -1121,7 +1167,6 @@ function makeNoteItem(id, data) {
       const hue = Math.random()*20+20;
       const sat = Math.random()*10+20;
       const light = Math.random()*10+25;
-      el.style.color = `hsl(${hue} ${sat}% ${light}%)`;
       el.style.fontSize = fontSize+"px";
       el.style.top = (Math.random()*75+5)+"vh";
 
@@ -1135,12 +1180,15 @@ const SPECIAL_NICK = [
   "메이드쟝강준호"
 ].map(normalizeNick);
 
-if (SPECIAL_NICK.includes(nick)) {
+if (SPECIAL_NICK_MAP[nick]) {
+  const info = SPECIAL_NICK_MAP[nick];
+
   el.classList.add("special");
-  el.textContent = m.text;   // ✅ 닉네임 숨김
+  el.style.color = info.color; // 색도 같이 맞추기 (선택)
+  el.textContent = `${info.label} : ${m.text}`;
 } else {
   el.style.color = `hsl(${hue} ${sat}% ${light}%)`;
-  el.textContent = `${m.nick}: ${m.text}`;
+el.textContent = `${getDisplayNick(m.nick)}: ${m.text}`;
 }
 
       const flowArea = document.getElementById('flowArea');
@@ -1181,37 +1229,46 @@ let velocityX = 0, velocityY = 0;
 let lastTime = 0;
 
 el.addEventListener("mousedown", (e) => {
+  e.preventDefault(); // ✅ 드래그 강제
+
+  const dragLayer = document.getElementById("dragLayer");
+  dragLayer.style.pointerEvents = "auto"; // ⭐ 핵심
+
   el.dataset.dragging = "true";
   el.classList.add("grabbing");
 
-  // 🔥 현재 화면에 보이는 좌표 (애니메이션 포함)
+  // 🔥 현재 화면 기준 좌표
   const rect = el.getBoundingClientRect();
 
-  // 🔥 grab 위치
   grabOffsetX = e.clientX - rect.left;
   grabOffsetY = e.clientY - rect.top;
 
-  // 🔥 먼저 fixed + 현재 좌표 고정 (애니메이션 유지 상태)
-  el.style.position = "fixed";
+  // 🔥 좌표 고정 (transform 흡수)
   el.style.left = rect.left + "px";
   el.style.top  = rect.top  + "px";
-  el.style.zIndex = 2000;
 
-  // 🔥 다음 프레임에서 애니메이션 제거 (튐 없음)
-  requestAnimationFrame(() => {
-    el.style.animation = "none";
-    el.style.transform = "none";
-  });
+  // 🔥 애니메이션 / transform 제거
+  el.style.animation = "none";
+  el.style.transform = "none";
 
-  el.style.visibility = "visible";
-  el.style.opacity = "1";
+  // 🔥 dragLayer로 이동
+  originalParent = el.parentNode;
+  originalNextSibling = el.nextSibling;
+  dragLayer.appendChild(el);
+
+  // 🔥 fixed 기준 + 최상단
+  el.style.position = "fixed";
+  el.style.zIndex = "2147483647";
   el.style.pointerEvents = "auto";
+
+  el.style.opacity = "1";
+  el.style.visibility = "visible";
 
   lastX = e.clientX;
   lastY = e.clientY;
   lastTime = performance.now();
-});  
-      
+});
+
 document.addEventListener("mousemove", (e) => {
   if (el.dataset.dragging !== "true") return;
 
@@ -1231,8 +1288,11 @@ document.addEventListener("mousemove", (e) => {
 });
 
 document.addEventListener("mouseup", () => {
-
   if (el.dataset.dragging !== "true") return;
+
+  const dragLayer = document.getElementById("dragLayer");
+  dragLayer.style.pointerEvents = "none";
+
   el.dataset.dragging = "false";
   el.classList.remove("grabbing");
 
@@ -1816,6 +1876,7 @@ function playResultBgm(result) {
 </script>
 </body>
 </html>
+
 
 
 
