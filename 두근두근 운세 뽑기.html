@@ -1698,8 +1698,11 @@ function pressEffect(target) {
 
 /* ================== 클릭 변경 보호 END ================== */
 /* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
-
+let isDrawRunning = false;
+  
 btn.addEventListener("click", () => {
+  if (isDrawRunning) return;
+  isDrawRunning = true;
   clickSound.currentTime = 0;
   clickSound.play();
 
@@ -1778,7 +1781,10 @@ changeCharacterWithSmokeByResult(result);
 
 setTimeout(() => {
     resetBtn.style.display = "block";
-    isResultShown = true;   //
+    isResultShown = true;
+
+    isDrawRunning = false;
+    btn.classList.remove("disabled");
 }, 300);
 
     }, 900);
@@ -1888,6 +1894,7 @@ function playResultBgm(result) {
 <div id="dragLayer"></div>
 </body>
 </html>
+
 
 
 
