@@ -1409,7 +1409,6 @@ window.initFirebase = initFirebase;
 
 </script>
 
-<!-- 오미쿠지 메인 스크립트 (원본 기능들 전부 유지) -->
 <script type="module">
 const startScreen = document.getElementById("startScreen");
 const loadingScreen = document.getElementById("loadingScreen");
@@ -1437,12 +1436,26 @@ const smokeRight = document.getElementById("smokeRight");
 const boomL = document.getElementById("boomL");
 const boomR = document.getElementById("boomR");
 
-// 시작할 때 기본값 동기화
-volumeSlider.value = bgm.volume;
+const INITIAL_BGM_VOLUME = 0.2;
+
+bgm.volume = INITIAL_BGM_VOLUME;
+let userVolume = INITIAL_BGM_VOLUME;
+volumeSlider.value = INITIAL_BGM_VOLUME;
+let lastVolumeBeforeMute = userVolume;
 
 // 슬라이드할 때 볼륨 조절
 volumeSlider.addEventListener("input", () => {
+  userVolume = parseFloat(volumeSlider.value);
   bgm.volume = volumeSlider.value;
+
+  if (userVolume > 0) {
+    lastVolumeBeforeMute = userVolume;
+    bgm.muted = false;
+    muteBtn.textContent = "🔊";
+  } else {
+    bgm.muted = true;
+    muteBtn.textContent = "🔇";
+  }
 });
 
 function preloadImage(src) {
@@ -1497,10 +1510,14 @@ const resultCharacters = {
   "대흉": { left: "character_img/react/left_대흉.webp", right: "character_img/react/right_대흉.webp" }
 };
 
-function fadeVolume(audio, target, duration) {
+function fadeVolume(audio, targetRatio, duration) {
   const steps = 20;
   const stepTime = duration / steps;
   const startVolume = audio.volume;
+
+  // 🔥 슬라이더 값보다 커지지 않게
+  const target = Math.min(userVolume, targetRatio);
+
   const diff = target - startVolume;
   let count = 0;
 
@@ -1518,7 +1535,7 @@ shakeSound.addEventListener("play", () => {
 /* 시작하기 → 로딩 화면 → 게임 화면 */
 startBtn.addEventListener("click", async () => {
   await window.initFirebase();
-  bgm.volume = 0.4;
+  bgm.volume = userVolume;
   bgm.play();
   startSound.currentTime = 0;
   startSound.play();
@@ -1698,8 +1715,8 @@ function pressEffect(target) {
 
 /* ================== 클릭 변경 보호 END ================== */
 /* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
-let isDrawRunning = false;
-  
+let isDrawRunning = false; // ⭐ draw 버튼 연타 방지용
+
 btn.addEventListener("click", () => {
   if (isDrawRunning) return;
   isDrawRunning = true;
@@ -1781,7 +1798,7 @@ changeCharacterWithSmokeByResult(result);
 
 setTimeout(() => {
     resetBtn.style.display = "block";
-    isResultShown = true;
+    isResultShown = true;   
 
     isDrawRunning = false;
     btn.classList.remove("disabled");
@@ -1857,8 +1874,27 @@ backToStartBtn.addEventListener("click", () => {
 /* 음소거 */
 const muteBtn = document.getElementById("muteBtn");
 muteBtn.addEventListener("click", () => {
-  bgm.muted = !bgm.muted;
-  muteBtn.textContent = bgm.muted ? "🔇" : "🔊";
+
+  // 🔇 뮤트 ON
+  if (!bgm.muted) {
+    lastVolumeBeforeMute = userVolume || lastVolumeBeforeMute;
+
+    bgm.muted = true;
+    bgm.volume = 0;
+    volumeSlider.value = 0;
+
+    muteBtn.textContent = "🔇";
+  }
+  // 🔊 뮤트 OFF
+  else {
+    bgm.muted = false;
+
+    userVolume = lastVolumeBeforeMute || INITIAL_BGM_VOLUME;
+    bgm.volume = userVolume;
+    volumeSlider.value = userVolume;
+
+    muteBtn.textContent = "🔊";
+  }
 });
 
 /* BGM */
@@ -1894,6 +1930,7 @@ function playResultBgm(result) {
 <div id="dragLayer"></div>
 </body>
 </html>
+
 
 
 
